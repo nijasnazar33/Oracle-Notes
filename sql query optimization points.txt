@@ -1,0 +1,151 @@
+result cache-
+database parameter: result_cache_mode
+hints: result_cache, no_result_cache
+
+
+look for:
+full table scans
+join methods, join order (nested loops, hash join, sorted merge join, Cartesian join)
+index access methods (Range/Unique/Full/Fast Full/Skip)
+filters
+parallel operations
+partition processing
+dynamic statistics
+cost
+
+nested loops:
+smallest row source is chosen as Driving table. Full table scan on driving table after the filters are applied. For each row returned in the driving table, the Inner table will be checked for join using index range scan on the foriegn key column.
+Needs the object statistics to be correct, otherwise optimizer will chose wrong table as driving table.
+
+hash join:
+smallest row source is chosen and used to build a hash table in Program Global Area memory as well as a bitmap. The second row source is hashed and and checked against the hash table looking for joins. The bitmap is used as a quick lookup to check if rows are in the hash table. Good for joining large row sources
+
+cartesian join:
+every row from every source is matched with every row in other sources. Happens because of wrong or missing joins.
+
+Sort Merger join:
+both row sources are sorted on the same joining key, then it is merged together and then rows are returned. Not good for large row sources.
+
+
+
+PGA is shared by all process in the system
+
+db_file_multiblock_readcount parameter determines how many blocks can be read parallelly at a time. usually this is set to 128. If increases sometimes the optimizer may skip an index range scan and will chose a full table scan as it can read more blocks in a small time.
+
+Both Index full scan and fast full scan scans all the blocks in the index rows(if the select statement has all the columns indexed this is a good approach.), but a fast full scan can use multiblock i/o and can be executed in parallel while the full scan will read one block at a time.
+
+
+Cost represents the estimated resource usage(IO, CPU, n/w) for an explain plan.
+
+summarY:
+we are looking for full table scan, we are looking for join methods, we know which joins are better in which circumstances nested loops vs hash joins, we will look at the index scans, whether the optimizer is using an index scan, if not why it is not using an index scan, is the index missing, is there any reason why optimizer didn't chose the index, maybe the way the query is written or other factors , maybe the size of the memory structure like the PGA is not enough for a hash join or sorted merge joins, do nested loops have index on foreign key column, was any part of the query was executed in parallel, if it wasn't how can we make the optimzer do that by adding a hint, is the partitions considered correctly so that there is not partition all in explain plan, whether the object statistics are used in the explain plan, if it is wrong and still used then the estimated no of rows in the explain plan might be way off from the actual number, maybe if a dynamic sample was done, maybe the sample was bad.
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ush_pred(alias_name) to avoid the inline view getting executed independenlty.
+leading(alias_name): choose this table as the driving table (this table should be of low row source)
+
+result cache will not be used:
+	-when result is not in result cache
+	-result in result cache is marked invalid because the raw data is changed
+
+result cache is useful for queries that access a lot of rows in the database but return small results, data that is not changed frequently.
+
+
+if there are relationship between columns of a table, the object statistics will not have this. in such cases extended statistics has to be created.
+select dbms_stats.create_extended_stats(null, 'TABLENAME', '(COLUMN1, COLUMN2)') from dual;--NEED TO BE DONE ONCE
+
+extended statistics for the given columns of the table will be genreated when other object statistics are created. but this can be immediately saved to database by:
+exec dbms_stats.gather_table_stats(user, 'TABLENAME', method_opt=>'for all columns size skewonly for columns(column1, column2)');
+
+OUT and IN OUT parameters are passed by value
+IN parameter is passed by reference
+use NOCOPY option when passing parameters by value for better performance while passing large data structures like collections and records.
+
+
+Nested loop is better for joining small result sets where the join columns are indexed.
+
+Hash join is better for joining larger result sets where one or more indexes are missing on the join columns.
+A hash table is built based on the fileds that we are doing the join on and store it in the PGA.
+Small PGA will cause optimizer to choose nested loop join (or store hash table in disk?? not good)
+
+Sort merge join is better than nested loop for large result set but not as good as has join.
+
+
+Buffer cache: where all our data goes, data from the table, data from index, undo data, all flavors of data.
+Shared Pool: code(table, packages, etc) and supporting information like object statistics
+PGA: temperory work area, where sorts are done in memory  (If temporary work cannot be done in PGA, it is done in temperory tablespace, ie. disk)
+Redo log buffer: Data changes
+
+The aim of the optimizer is to read as less blocks as possible.
+So if the optimizer finds that using an index it will read more blocks than a full table scan, then optimizer will go with full table scan.
+
+
+session and system parameters that can affect the execution plan:
+optimizer_mode: tells optimizer to come up with a certain type of plan. (all_rows, first_rows, first_rows_100)
+db_file_multiblock_read_count: using this a Full Table Scan can read multiple blocks in a single I/O
+optimizer_index_caching: low value(default value lowest is 0; highest value is 100) means the chances of finding an index in the buffer cache is very slim. So Full table scan is better.
+optimizer_cost_adj: lower value from default 100 means index cost less than full table scan. So index scan is better.
+
+Sorts in PGA: Order by, Distinct, group by, union, intersect, minus, hash join, sort-merge join, creating index, generating statistics
+
+
+Tuning techniques:
+1. Take advantage of the result cache which is a memory structure that will store the results of the queries, in situations where data read is more than data update.
+2. Use RESULT_CACHE in functions(after RETURN, before IS/AS), which will cache the output of the function for every input it gets.
+3. Gather extended statistics if necessary. This is useful when there are relationships between columns of a table that the optimizer cannot pick up by itself.
+Use dbms_stats.create_extended_stats() and dbms_stats.gather_table_stats() for this.
+4. In PL/SQL use bulk processing with BULK COLLECT and FORALL to reduce the amount of context switches.
+5. Avoid operations that can make optimizer not to consider index on the column(<>, !=, functions on indexed column, implicit type conversion on indexed column, LIKE with % or _ in the beginning of search text, arithmetic or || operations on indexed columns)
+6. Pass parameters by reference for OUT and IN OUT parameters especially when passing large data structure like collections or records. Use NOCOPY for this.
+7. Make sure correct join method is used in the explain plan:- Nested loop, hash join, sort-merge join.
+8. Compare performance between different syntax(join, IN/NOT IN, EXISTS/NOT EXISTS, MINUS, etc). 
+9. Use table names or table alias names to prefix all columns in SELECT and WHERE clause so that the optimizer doesn't have to search which table the column belongs to and also no need to check whether there is any name conflict.
+10. Analyse the joins in the explain plan one by one and check that the join method makes sense in each circumstance. What was joined first? What join mehtod was uses? Is the join method correct in the given circumstance? Move on to the next join and continue analysis.
+11 Eliminate rows as early as possible. That is the WHERE conditions need to be executed first before the joins so that the row sources are  reduced.
+12. Understand potential bottlnecks within Oracle architecture in Memory structure(Buffer Cache, Shared Pool, PGA, Redo Log buffer) and in Redo Log files(Data changes)
+13. Read the fewest number of blocks possible(not the fewest no of records). If a full table scan reads fewer number of blocks as compared to an index range scan then the former is better in this case.
+14. Be aware of session and system parameters (optimizer_mode, db_file_multiblock_read_count, optimizer_index_caching, optimizer_cost_adj)
+15. When creating an index with multiple columns, choose the most likely used column in the WHERE clause as the first/leading column of the index. 
+(Index Skip Scan feature expects least selective column at the front though)
+16. Avoid unnecessary sorts in PGA(Order by, Distinct, group by, union, intersect, minus, hash join, sort-merge join, creating index, generating statistics)
+17. Reduce number of SQL statements in PLSQL to reduce context switching. (ie reduce number of SELECT ... from DUAL)
+18. follow common standards.
+19. use tuning tools like pl/sql profiler, sql tuning advisor, explain plan ,autotrace.
+20. use hints as temperory soln only.(INDEX, ORDERED, USE_HASH, USE_NL, PARALLEL, ALL_ROWS, FIRST_ROWS, APPEND, CACHE, RESULT_CACHE, LEADING, NO_INDEX, )
+
+
+
+
+
+cardinality is the estimated number of rows that step in the query will return.
+cost is the estimated amount of work the plan will do/ estimated resource usage(I/O, CPU, n/w) for a plan 
+
+SQL PROFILES: DBA_SQL_PROFILES
+SQL PLAN BASELINES: DBA_SQL_PLAN_BASELINES view
+
+
+
+Cursor is a pointer to the context area/memory which has stored one or more rows returned by the sql query.
+
+
+
+cardinality = no of distinct values/totla no of records
+
+things in object statistics:
+no of rows in the table.
+no of blocks the rows make up
+no of distinct values on indexed columns
+
+if object statistics are missing, optimizer will do dynamic sampling to get dynamic statistics which will take time.. this is somthing to avoid. if the sample is bad, plan is going to be bad.
+
+
+
+All these things can be done w/o rewriting queries  to compare Cost of a query:-
+-creating index
+-dropping index
+-adding cols to indexes
+-changing parameter settings
+-updating statistics
+-changing memory sources

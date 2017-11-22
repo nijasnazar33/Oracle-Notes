@@ -1,0 +1,110 @@
+Create Data Model only in Report Builder.
+Save as rdf.
+Create executable:
+    Execution Methods: Oracle Reports
+Crate Concurrent Program:
+    Format: XML
+    Print: Unchecked
+    Style: A4
+
+BI Publisher ADD in:
+    Data->Load XML Data
+    Insert->All fields
+    Tools->Validate (Save as RTF)
+    Preview->RTF/PDF
+    
+XML Publisher Administrator:
+    Create Data Definition:
+        Name: Any name
+        Code: Concurrent Program Short Name
+    Create Template:
+        Name: Any name
+        Code: Any Code
+        Data Definition: Ane of the data defintion from pervious step
+        Type: RTF
+        Default Output Format: Excel/HTML/PDF (optional)
+        Template File:
+            File: Browse the saved RTF template
+            Language: English
+            
+When submitting program in SRS screen, name of the layout will appear.
+If program Completes with Warning, attach the program 'XML Report Publisher' to the request group of the conc program.
+Submit XML Report Publisher instead of the actual conc program:
+    Report Request: Name of the actual conc program
+    Template: name of the template
+    Output Format: Excel/HTML/PDF/RTF
+
+    
+Instead of Inserting all fields in BI Publisher, we can do it manually by giving tags directly or giving form fields:
+Giving tags:
+        Create a table with two rows. First row will have headers.
+        Second row will have the fields.
+        For fields, the tag has to be given with ? inside the tag
+        eg: if the xml tag is <EMPNO>, then in BI publisher, give it as <?EMPNO?>
+        In the first item in the second row, we need to specify the looping logic:
+        eg: <?for-each:G_EMPNO?>   G_EMPNO is the group name that was given in rdf
+        In the last item in the second row, we need to close the loop (optional):
+        eg: <?end for-each?>
+
+Giving Form fields:
+        Create a table with two rows. First row will have headers.
+        Second row will have the fields.
+        Insert-Field. Place the cursor in first item in second row. Insert.
+        Update form fields for every item in second row.
+        Or we can give copy the first form field. Double click. Change Default Text and tag in Add help text.
+        (Default text can be anything, but tag in help text has to be the same xml tag)
+        In the first item in the second row, we need to specify the looping logic:
+        eg: Copy any form field. Double Click. Change Default Text and tag in Add help text: <?for-each:G_EMPNO?>
+            (G_EMPNO is the group name that was given in rdf)
+        In the last item in the second row, we need to close the loop (optional):
+        eg: Copy any form field. Double Click. Change Default Text and tag in Add help text: <?end for-each?>
+         
+        
+If Conditons:
+	Create a user parameter and add List of Values to it in Report Builder
+	Create a formula column in data model that returns the user parameter
+	In BI Publisher, copy any form field and edit to make it an if condition:
+		Default Text: IF
+		Add Help Text: <?if:CF_1='EMP'?>      (CF_1 is the tag or name of the formula column)
+	Copy another form field to close if condition:
+		Default Text: ENDIF
+		Add help Text: <?end if?>
+
+	If conditioins inside template can be used:-
+		-	to choose different layouts in the same template
+		-	to show No Data Found in Master Detail reports
+		-	to selectively call template name(like image)
+		
+
+Calculations inside RTF(Summary):
+	<?count(EMPNO)?>								(EMPNO is an xml tag)
+	<?sum(SAL)?>
+
+We can also add new calculated tabular field:
+	<?SAL+COMM?>
+	To get sum of this:
+		<?sum(SAL)+sum(COMM)?>
+		or
+		<?sum(TOTAL_SAL)?>						(TOTAL_SAL is the form field name)
+	
+	(When doing calculations NULLS has to be handled. Use NVL at query level or in the property of the field, update 'Value if Null' to 0)
+	
+In Master Detal reports to separate each master data in page:
+	-	Copy any existing field between the end if's of the master and detail
+	-	Default Text: PAGEBREAK
+	-	Add Help Text: <?split-by-page-break:?>
+	
+
+Image or any other data can be added to the template and assign a name.
+	<?template:image1?>
+	<Insert Image or other item here>
+	<?end template?>
+In the report this template can be accessed anywher by calling it like a function:
+	<?call:image1?>
+	
+
+To load an image dynamically:
+	-	Insert a dummy image
+	-	Right-click->Size->All Text
+	-	append the location given in Alternative Text with 'url:'
+	-	Now at runtime whichever file is present in that location with the given name will be printed in the report

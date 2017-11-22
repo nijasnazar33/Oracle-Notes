@@ -1,0 +1,380 @@
+fnd_global.apps_initialize(user_id, resp_id, resp_appl_id, security_group_id);
+lv_request_id:=fnd_request.submit_request(application, program, description, start_time, sub_request, parameter1,..)
+lv_request_status:=fnd_concurrent.wait_for_request(request_time, INTERVAL(interval Number of seconds to wait between checks),
+													max_wait(Maximum number of seconds to wait for the request completion out arguments),
+													phase, status, dev_phase, dev_status, message)
+table: FND_CONCURRENT_REQUESTS, column: PHASE_CODE
+Value	 Meaning
+ C		 Completed
+ I		 Inactive
+ P		 Pending
+ R		 Running
+
+ STATUS_CODE
+Value	 Meaning
+ D		 Cancelled
+ U		 Disabled
+ E		 Error
+ M		 No Manager
+ R		 Normal
+ I		 Normal
+ C		 Normal
+ H		 On Hold
+ W		 Paused
+ B		 Resuming
+ P		 Scheduled
+ Q		 Standby
+ S		 Suspended
+ X		 Terminated
+ T		 Terminating
+ A		 Waiting
+ Z		 Waiting
+ G		 Warning
+ 
+
+Concurrent Request Phase and Status
+
+Phase	Status	Description
+PENDING	Normal	Request is waiting for the next available manager.
+ 	Standby	Program to run request is incompatible with other program(s) currently running.
+ 	Scheduled	Request is scheduled to start at a future time or date.
+ 	Waiting	A child request is waiting for its Parent request to mark it ready to run. For example, a request in a request set that runs sequentially must wait for a prior request to complete.
+RUNNING	Normal	Request is running normally.
+ 	Paused	Parent request pauses for all its child requests to finish running. For example, a request set pauses for all requests in the set to complete.
+ 	Resuming	All requests submitted by the same parent request have completed running. The Parent request resumes running.
+ 	Terminating	Request is terminated by choosing the Cancel Request button in Requests window.
+COMPLETED	Normal	Request completed successfully.
+ 	Error	Request failed to complete successfully.
+ 	Warning	Request completed with warnings. For example, a request is generated successfully but fails to print.
+ 	Cancelled	Pending or Inactive request is cancelled by choosing the Cancel Request button in the Requests window.
+ 	Terminated	Request is terminated by choosing the Cancel Request button in the Requests window.
+INACTIVE	Disabled	Program to run request is not enabled. Contact your system administrator.
+ 	On Hold	Pending request is placed on hold by choosing the Hold Request button in the Requests window.
+ 	No Manager	No manager is defined to run the request. Check with your system administrator. A status of No Manager is also given when all managers are locked by run-alone requests.
+ 
+Implicit cursors: SQL%FOUND/NOTFOUND/ISOPEN/ROWCOUNT/BULK_ROWCOUNT/BULK_EXCEPTIONS
+ 
+Editioning view: exec ad_zd_table.upgrade('SCHEMA_NAME','TABLE_NAME');
+Edition-based redefinition enables you to upgrade the database component of an application while it is in use, thereby minimizing or eliminating down time.
+ 
+A collection is an ordered group of elements, all of the same type. Each element is addressed by a unique subscript.
+-Associative arrays(index-by tables)
+-Nested tables
+-Varrays
+
+TYPE nested_type IS TABLE OF VARCHAR2(30);
+TYPE varray_type IS VARRAY(5) OF INTEGER;
+TYPE assoc_array_num_type IS TABLE OF NUMBER INDEX BY PLS_INTEGER;
+TYPE assoc_array_str_type IS TABLE OF VARCHAR2(32) INDEX BY PLS_INTEGER;
+TYPE assoc_array_str_type2 IS TABLE OF VARCHAR2(32) INDEX BY VARCHAR2(64);
+
+1. EXISTS Method – EXISTS(n) returns TRUE if the nth element in a collection exists. Otherwise, EXISTS(n) returns FALSE.
+2. COUNT Method – COUNT returns the number of elements that a collection currently contains.
+3. LIMIT Method – For nested tables and associative arrays, which have no declared size, LIMIT returns NULL. For varrays, LIMIT returns the maximum number of elements that a varray can contain.
+4. FIRST and LAST Methods – FIRST and LAST return the first and last (smallest and largest) index numbers in a collection that uses integer subscripts.
+5. PRIOR and NEXT Methods – PRIOR(n) returns the index number that precedes index n in a collection. NEXT(n)returns the index number that succeeds index n. If n has no predecessor, PRIOR(n)returns NULL. If n has no successor, NEXT(n)returns NULL.
+6. EXTEND Method – To increase the size of a nested table or varray, use EXTEND.
+EXTEND appends one null element to a collection.
+EXTEND(n) appends n null elements to a collection.
+EXTEND(n,i) appends n copies of the ith element to a collection.
+7. TRIM Method –
+TRIM removes one element from the end of a collection.
+TRIM(n) removes n elements from the end of a collection.
+If you want to remove all elements, use DELETE without parameters.
+8. DELETE Method –
+DELETE with no parameters removes all elements from a collection, setting COUNT to 0.
+DELETE(n) removes the nth element from an associative array with a numeric key or a nested table. If the associative array has a string key, the element corresponding to the key value is deleted. If n is null, DELETE(n) does nothing.
+DELETE(m,n) removes all elements in the range m..n from an associative array or nested table. If m is larger than n or if m or n is null, DELETE(m,n)does
+
+BULK_EXCEPTIONS:
+If you want the PL/SQL engine to execute as many of the DML statements as possible, even if errors are raised along the way, add the SAVE EXCEPTIONS clause to the FORALL header. Then, if the SQL engine raises an error, the PL/SQL engine will save that information in a pseudocollection named SQL%BULK_EXCEPTIONS, and continue executing statements. When all statements have been attempted, PL/SQL then raises the ORA-24381 error.
+You can—and should—trap that error in the exception section and then iterate through the contents of SQL%BULK_EXCEPTIONS to find out which errors have occurred. You can then write error information to a log table and/or attempt recovery of the DML statement.
+SYNTAX:
+FORALL indx IN 1 .. l_eligible_ids.COUNT SAVE EXCEPTIONS
+      UPDATE employees emp
+         SET emp.salary =
+                emp.salary + emp.salary * increase_pct_in
+       WHERE emp.employee_id = l_eligible_ids (indx);
+Total count of BULK_EXCEPTIONS: SQL%BULK_EXCEPTIONS.COUNT
+Contents of BULK_EXCEPTIONS: SQL%BULK_EXCEPTIONS (indx).ERROR_INDEX and SQL%BULK_EXCEPTIONS (indx).ERROR_CODE)
+
+A record is a group of related data items stored in fields, each with its own name and datatype. You can think of a record as a variable that can hold a table row, or some columns from a table row. The fields correspond to table columns.
+  
+TYPE emp_name_rec is RECORD (
+firstname employees.first_name%TYPE,
+lastname employees.last_name%TYPE,
+hiredate employees.hire_date%TYPE
+);
+
+For Sparse collecctions with empty indices, IN INDICES OF and IN VALUES OF can be used.
+	FORALL indx IN INDICES OF v_empid
+	
+looping inside a table of data in Oracle Forms:
+GO_BLOCK('IKN_CUSTOMER_AR_V');  
+FIRST_RECORD;
+LOOP
+<>
+<>
+EXIT WHEN :SYSTEM.LAST_RECORD='TRUE';
+NEXT_RECORD;
+END LOOP;
+
+PL/SQL
+VARCHAR2 and CHAR can hold upto 2^15-1 bytes.
+NUMBER can hold 40 digits.
+CLOB 128 terrabyte
+
+NUMBER (precision, scale)
+Legal values for precision range from 1 to 38, and legal values for scale range from -84 to 127.
+
+SQL:
+VARCHAR2 and CHAR: 4000 bytes
+NUMBER 10,000 something.
+CLOB 4GB times datablock size.
+
+PLS_INTEGER: -2,147,483,648 to 2,147,483,647
+
+In format mask: use 9, use 0 to replace 0 with missing digits, FM to remove leading zeros, extra blanks or white space, L for dollar.
+eg:- 'FML9,999,999.99'
+
+DATE—This datatype stores a date and a time, resolved to the second. It does not include the time zone. DATE is the oldest and most commonly used datatype for working with dates in Oracle applications.
+eg:- l_today_date        DATE := SYSDATE;
+
+TIMESTAMP—Time stamps are similar to dates, but with these two key distinctions: (1) you can store and manipulate times resolved to the nearest billionth of a second (9 decimal places of precision), and (2) you can associate a time zone with a time stamp, and Oracle Database will take that time zone into account when manipulating the time stamp.
+l_today_timestamp   TIMESTAMP := SYSTIMESTAMP;
+l_today_timetzone   TIMESTAMP WITH TIME ZONE := SYSTIMESTAMP;
+
+INTERVAL—Whereas DATE and TIMESTAMP record a specific point in time, INTERVAL records and computes a time duration. You can specify an interval in terms of years and months, or days and seconds. 
+l_interval1         INTERVAL YEAR (4) TO MONTH := '2011-11';
+l_interval2         INTERVAL DAY (2) TO SECOND := '15 00:30:44';
+
+Function			Time Zone			Datatype Returned				Example
+CURRENT_DATE		Session				DATE							14-SEP-17 14:28:35
+CURRENT_TIMESTAMP	Session				TIMESTAMP WITH TIME ZONE		14-SEP-17 02.28.35.842591000 PM ASIA/CALCUTTA
+LOCALTIMESTAMP		Session				TIMESTAMP						14-SEP-17 02.28.35.842591000 PM
+SYSDATE				Database server		DATE							14-SEP-17 04:58:35
+SYSTIMESTAMP		Database server		TIMESTAMP WITH TIME ZONE		14-SEP-17 04.58.35.842583000 AM -04:00
+
+Format masks for to_char(SYSDATE)
+TO_CHAR(SYSDATE, 'Day, DDth month YYYY')		Sunday   , 07TH August    2011
+select TO_CHAR(SYSDATE, 'Day, DDth Month YYYY','NLS_DATE_LANGUAGE=French') from dual;
+To remove leading zeroes: select TO_CHAR(SYSDATE-5, 'FMDay, DDth Month YYYY','NLS_DATE_LANGUAGE=French') from dual;
+Quarter: TO_CHAR (SYSDATE, 'Q')
+Day of the year: TO_CHAR (SYSDATE, 'DDD')
+Displaying date:
+		BEGIN
+		  DBMS_OUTPUT.put_line (
+			TO_CHAR (SYSDATE, 
+		'YYYY-MM-DD HH24:MI:SS'));
+		END;
+Get year: EXTRACT (YEAR FROM SYSDATE)
+Get Date: EXTRACT (DAY FROM SYSDATE) 
+
+Format masks for to_date('date in char')
+default format is 'DD-MON-YYYY' (month could be short(3 chars) or full)
+To use other format, give the format as second parameter:
+eg: select to_date('14-07-2017','DD-MM-YYYY') from dual;
+
+TRUNC eg:
+Set l_date to today’s date, but with the time set to 00:00:00: TRUNC (SYSDATE);
+Get the first day of the month for the specified date: TRUNC (SYSDATE, 'MM');
+Get the first day of the quarter for the specified date: TRUNC (SYSDATE, 'Q');
+Get the first day of the year for the specified date: TRUNC (SYSDATE, 'Y');
+
+Date arithmetic:
+Set a local variable to tomorrow’s date: SYSDATE + 1;
+Move back one hour: SYSDATE - 1/24;
+Move ahead 10 seconds: SYSDATE + 10 / (60 * 60 * 24);
+Move ahead one month: ADD_MONTHS (SYSDATE, 1);
+Move backward three months: ADD_MONTHS (SYSDATE, -3);  
+Find the next Saturday after today’s date: NEXT_DAY (SYSDATE, 'SAT') or NEXT_DAY (SYSDATE, 'SATURDAY');
+Date of the last day of the month: LAST_DAY (SYSDATE) 
+
+
+Exception types: internally defined, predefined, and user-defined.
+
+SQLERRM or sys.DBMS_UTILITY.FORMAT_ERROR_STACK
+sys.DBMS_UTILITY.FORMAT_ERROR_BACKTRACE		-		The line on which the error occurred.
+sys.DBMS_UTILITY.FORMAT_CALL_STACK			-		The execution call stack
+
+RAISE_APPLICATION_ERROR(<a number from -20,999 to -20,000>, <error message>)
+
+For user defined exceptions by default error code is 1, this can be changed by using PRAGMA_EXCPETION_INIT:
+   e_balance_too_low   EXCEPTION;
+   PRAGMA EXCEPTION_INIT (
+      e_balance_too_low, -20000);
+	  
+
+Use PRAGMA AUTONOMOUS_TRANSACTION at the beginning of DECLARE so that whatever COMMIT and ROLLBACK happening inside that block will not affect other changes in the session.
+
+Get table structure:
+DESCRIBE plch_employees;
+
+
+
+Types of Collections
+Collections were first introduced in Oracle7 Server and have been enhanced in several ways through the years and across Oracle Database versions. There are now three types of collections to choose from, each with its own set of characteristics and each best suited to a different circumstance.
+
+Associative array. The first type of collection available in PL/SQL, this was originally called a “PL/SQL table” and can be used only in PL/SQL blocks. Associative arrays can be sparse or dense and can be indexed by integer or string.
+(does not need initialization by calling the constructor before we can use it.  Note that with an associative array, it is not necessary to use EXTEND or start with index value 1.)
+
+Nested table. Added in Oracle8 Database, the nested table can be used in PL/SQL blocks, in SQL statements, and as the datatype of columns in tables. Nested tables can be sparse but are almost always dense. They can be indexed only by integer. You can use the MULTISET operator to perform set operations and to perform equality comparisons on nested tables.
+(needs initialization by calling the constructor before we can use it. EXTEND has to be used before adding elements everytime)
+Multiset operation in Nested table-
+parents := happyfamily MULTISET EXCEPT children;
+
+Varray. Added in Oracle8 Database, the varray (variable-size array) can be used in PL/SQL blocks, in SQL statements, and as the datatype of columns in tables. Varrays are always dense and indexed by integer. When a varray type is defined, you must specify the maximum number of elements allowed in a collection declared with that type.
+
+
+FORALL:
+Rather than move back and forth between the PL/SQL and SQL engines to update each row, FORALL “bundles up” all the updates and passes them to the SQL engine with a single context switch. The result is an extraordinary boost in performance. 
+
+
+SAVE EXCEPTIONS:
+If you want the PL/SQL engine to execute as many of the DML statements as possible, even if errors are raised along the way, add the SAVE EXCEPTIONS clause to the FORALL header. Then, if the SQL engine raises an error, the PL/SQL engine will save that information in a pseudocollection named SQL%BULK_EXCEPTIONS, and continue executing statements. When all statements have been attempted, PL/SQL then raises the ORA-24381 error.
+		BEGIN
+		   FORALL indx IN 1 .. l_eligible_ids.COUNT SAVE EXCEPTIONS
+			  UPDATE employees emp
+				 SET emp.salary =
+						emp.salary + emp.salary * increase_pct_in
+			   WHERE emp.employee_id = l_eligible_ids (indx);
+		EXCEPTION
+		   WHEN OTHERS
+		   THEN
+			  IF SQLCODE = -24381
+			  THEN
+				 FOR indx IN 1 .. SQL%BULK_EXCEPTIONS.COUNT
+				 LOOP
+					DBMS_OUTPUT.put_line (
+						  SQL%BULK_EXCEPTIONS (indx).ERROR_INDEX
+					   || ‘: ‘
+					   || SQL%BULK_EXCEPTIONS (indx).ERROR_CODE);
+				 END LOOP;
+			  ELSE
+				 RAISE;
+			  END IF;
+		END increase_salary;
+
+
+
+DATA DICTIONARY:
+USER_ARGUMENTS-
+The arguments (parameters) in all the procedures and functions in your schema.
+USER_DEPENDENCIES-
+The dependencies to and from objects you own. This view is used mostly by Oracle Database to invalidate the status of database objects when an object on which they depend changes.
+USER_ERRORS-
+The current set of compilation errors for all stored objects (including triggers) you own. This view is accessed by the SHOW ERRORS SQL*Plus command. You can, however, write your own queries against it as well.
+USER_IDENTIFIERS-
+Introduced in Oracle Database 11g and populated by the PL/Scope compiler utility. Once populated, this view provides you with information about all the identifiers—program names, variables, and so on—in your code base.
+USER_OBJECT_SIZE-
+The size of the objects you own. Actually, this view shows you the source, parsed, and compile sizes for your code. Although it is used mainly by the compiler and runtime engine, you can use it to identify the large programs in your environment.
+USER_OBJECTS-
+The objects you own. You can, for instance, use this view to see if an object is marked INVALID, find all the packages that have EMP in their names, and so on.
+USER_PLSQL_OBJECT_SETTINGS-
+Information about the characteristics—such as the optimization level and debug settings—of a PL/SQL object that can be modified through the ALTER and SET DDL commands.
+USER_PROCEDURES-
+Information about stored programs, such as the AUTHID setting, whether the program was defined as DETERMINISTIC, and so on.
+USER_SOURCE-
+The text source code for all objects you own (in Oracle9i Database and above, including database triggers and Java source). This is a very handy view, because you can run all sorts of analyses of the source code against it with SQL and, in particular, Oracle Text.
+USER_STORED_SETTINGS-
+PL/SQL compiler flags. Use this view to discover which programs have been compiled via native compilation.
+USER_TRIGGERS and USER_TRIGGER_COLS-
+The database triggers you own (including the source code and a description of the triggering event) and any columns identified with the triggers, respectively. You can write programs against USER_TRIGGERS to enable or disable triggers for a particular table.
+
+An optimization level of 0 means no optimization at all. An optimization level of 1 means a minimal amount of optimization. Neither of these levels should be seen in a production environment.
+SELECT name
+  FROM user_plsql_object_settings
+ WHERE plsql_optimize_level < 2
+
+ 
+Three versions of the Data Dictionary:
+The USER view: information about database objects owned by the schema to which you are connected  
+The ALL view: information about database objects to which the currently connected schema has access  
+The DBA view: unrestricted information about all the database objects in a database instance (non-DBA schemas usually have no authority to query DBA views) 
+
+
+ 
+NATIVE DYNAMIC SQL??
+triggers;
+Pseudorecords in Database Triggers
+
+
+order, CUSTOMER AND PARTY TABLES:
+select flow_status_code, invoice_to_org_id, order_number, ooha.header_id from oe_order_headers_all ooha;
+--invoice_to_org_id/sold_to_org_id/ship_to_org_id is site_use_id in hz_cust_site_uses_all
+
+select * from hz_locations; --location_id
+
+select * from hz_parties;             --party_id, party_number, party_name, party_type
+select * from hz_party_sites;         --party_site_id, party_site_number, party_id, location_id,
+select * from hz_party_site_uses;     --party_site_use_id, party_site_id, site_use_type, status
+
+select * from hz_cust_accounts;       --cust_account_id, account_number, party_id
+select * from hz_cust_acct_sites_all; --cust_acct_site_id, cust_account_id
+select * from hz_cust_site_uses_all;  --site_use_id, cust_acct_site_id, site_use_code, location, bill_to_site_use_id
+select * from hz_locations where location_id in (,);
+
+
+ORDER TYPES TABLE: OE_TRANSACTION_TYPES_ALL with transaction_type_code = 'ORDER'; (has a TL table which gives the order type name)
+
+
+SQL HINTS:-
+v$sql_hint :-
+
+subquery factoring: using with
+so select ... from a, b, (select ... from aa) c, d :-can be written as 
+with(
+select ... from aa
+)c
+select ...
+from a,b,c,d;
+
+
+High Water Mark (HWM): At any point in time the most data we had in the table, that block represents the HWM
+Using DELETE keeps HWM in the same place, which will make FULL TABLE SCANS ineffective even with less number of records as optimizer is reading all the empty blocks in between.
+TRUNCATE brings down the HWM.
+ALTER TABLE hr.employees ENABLE ROW MOVEMENT;
+ALTER TABLE table_name SHRINK SPACE;
+
+
+
+Mailing in pl/sql:-
+----------------
+Methods:
+	-	UTL_SMTP	(complex)
+	-	UTL_TCP
+	-	UTL_MAIL	(simple)
+	
+First dba needs to setup SMTP_OUT_SERVER.
+On session this can be done:
+	ALTER SESSION SET SMTP_OUT_SERVER = '127.0.0.1'
+	
+BEGIN
+	EXECUTE IMMEDIATE 'ALTER SESSION SET SMTP_OUT_SERVER=''127.0.0.1''';
+	UTL_MAIL.SEND(
+		sender => 'me@address.com',
+		recepients => 'you@address.ccom',
+		subject => 'Test Mail',
+		message => 'Hellow World',
+		mime_type => 'text; charset-us-ascii',
+		attachment => '...', 									--contents of the attachment
+		att_inline => TRUE,									--attachment in-line?
+		att_filename => '...'									--name of the file to hold the attachment after the file is received
+		
+		);
+END;
+
+it also has other parameters like 'cc', 'bcc', etc
+multiple mail ids in recepients can be separated by comma.
+
+We can also attach attachments either RAW or VARCHAR2 content(upto 32k).
+
+
+----------------------------------------------------------------------------------------------------------
+
+Register Table in Oracle Apps:
+AD_DD.REGISTER_TABLE(<app short name>, <table name>, <type 'T'>, <next extent> <pct used>, <pct free>)
+Register Columns in Oracle Apps:
+AD_DD.REGISTER_TABLE(<app short name>, <table name>, <column name>, <col number>, <datatype>, <length>, <nullable>, <translatable>)
+
+After registering we can check it in Application Developer-->Application-->Datbase-->Table

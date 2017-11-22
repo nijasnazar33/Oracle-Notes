@@ -1,0 +1,9 @@
+text item property:-
+	-	Multiline: useful for big text fields
+	-	Conceal data: for passwords
+	-	Initial Value
+	
+	
+Image item property:-
+	-	Image Format: BMP/GIF/TIFF
+	-	Sizing Style: Crop/Adjust

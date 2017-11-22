@@ -1,0 +1,335 @@
+Oracle Report Builder can develop and deploy Web and paer report against any data source.
+Report output can be delivered directly to a printer/email/saved in any of these formats:
+	- HTML
+	- RTF
+	- PDF
+	- XML
+	- Microsoft Excel
+	
+
+Various report styles:
+	- Tabular report: The report output is orgainized in multicolumn, multirow format with each column corresponding to a column in database
+	- Group above reort: Master-Detail report in which for every master group, the related values of the detailed group are fetched from database and displayed below master information.
+	- Group left report: Use this report to restrict a column from repeating value several times while values of related columns change by making it a group/brake column.
+	- Form-like report: Displays one record per page, displaying field values to the right of field labels.
+	- Form letter report: Used for printing multiple copies of same letter addressed to different people.
+	- Mailing label report: Data displayed in a format suitable for use as address labels on envelopes.
+	- Matrix report: It consists of one row of labels and one column of labels with information in a grid format that is related to both row and column label.
+
+Report wizard enbales us to define both data definition and layout of the report.
+
+Web layout for Web source view
+Paper layout for Paper design view
+
+Object Navigator: Provides heirarchichal display of all objects in a report.
+Report Editor: Provides different view to handles the data objects and layout objects for Web and paper layouts.
+	- Data Model View				: Displays structural representation of data in a report. We can create/define/modify data model objects(queries, groups, formula columns, summary columns)
+	- Web Source View				: Displays the source code for JSP-based Web report including HTML, JSP, XML tags.	
+	- Paper Layout View				: Displays the format of the paper report. We can modify the format by working with layout objects(text, graphic objects, frames, graphs, fields, report blocks)
+	- Paper Design View				: Displays the preview of the paper report, where we can manipulate the actual, live data.
+	- Paper Parameter Form View	: Displays the layout of the Paper Parameter form, which allows users to input parameters at run time.
+	
+.rdf report is binary
+.jsp report is text which is easy to edit
+
+
+
+Mailing Label Report
+-------------------
+Available only in Paper Layout.
+Add title and then select Mailing Label report as the title field gets disabled once report is selected.
+Paper Layout-->Main Section-->Body-->Select the Property Inspector of the repeating frame:
+	Horiz. Space Between Frames: Adjusts the verical space between each labels
+	Vert. Space Between Frames: Adjusts the horizontal space between each labels
+	
+Form Letter Report
+------------------
+Available only in Paper Layout.
+If last line of the letter is not displayed, either add 2 newlines at the end or increase the height of the report.
+
+
+Master-Master Report
+---------------------
+Its a multiple queries reprot in which the queries are unrelated. 
+Report contains separate sets of data with no direct links (unlike parent/child relationships)
+This is easier to build manually without using the Report Wizard by creating the data model and layout separately.
+So we create an empty report first, then add the queries, and then create the layouts.
+Use Data Wizard to create all the data models/queries and then use the Reports Wizard to create the layouts.
+In Report wizard choose the required Groups that is required in the report.
+To adjust space between each tables, go to Paper layout view, select the second frame and move it down.
+
+
+Group Above Report with Summary
+---------------------------------
+When a program summarizes data, its sorts the data, break it into groups, and then summarizes the value in each group.
+Following summaries can be created:
+	- Sum the values in each group
+	- Count all the values or only those values that are distinct from one another
+	- Determine the maximum, minimum, average.
+	- Calculate the percent value of the total of a column
+	
+When adding a summary column like sum/avg/max/min of some column, the group by used in the query is to get the correct summayr value.
+How the report layout groups the data is not decided by the query, but by the next step in which we decide what the Group Fieldsd are.
+
+
+Suppose a query is given as:
+select sales_rep_id, customer_id, sum(order_amount) amount_total from orders group by sales_rep_id, customer_id.
+amount_total is the sum of amount for each sales rep and customer.
+In report wizard, all these three fields are availabe.
+In Grouping Tab use only sales_rep_id, which will show customer_id and total in a table under each sales_rep_id.
+In Display Tab use all three(sales_rep_id, customer_id and amount_total)
+In Calculation tab, choose Sum(amount_total) which will create two new columns:
+	- one to calculate the sum in each group(i.e, for each sales_rep_id). This will be given under each group. (SumAMOUNT_TOTALPerSALES_REP_ID)
+	- one to calculate the sum for the whole report. This will be given at the end of the report. (SumAMOUNT_TOTALPerReport)
+In Calculation Tab, choose % of Total(amount_total), which will again create two new columns:
+	- one to calculate the percentage value of each customers order w.r.t the total order of that sales rep. This will be displayed for each customer. (TotalAMOUNT_TOTALPerCUSTOMER_ID)
+	- one to calculate the percentage value of each sales_rep order w.r.t the total order. This will be displayed under each group,i.e,for each sales rep. (TotalAMOUNT_TOTALPerSALES_REP_ID)
+
+To adjust space between each groups adjust the verical spacing parameter for the repeating frame.
+
+Summary Column settings:-
+Function: choose funtion like sum, avg, min, max, count, first, last, %of total, standard deviation, variance.
+Source: column on which calculation is to be done.
+Reset At: at what group level the function is to be applied. (level of frequency at which the summary columns value returns to zero. We can summarize at entire report or at group. It is usually the  group name in which the summary column in declared)
+Compute at: only for %total. Compute at 'Report' will calculate the percentages based on the total report total of that colum value. (can be given any group name also. It is usually one group higher than the group in which the summary column is declared)
+
+
+Group Left Report
+-----------------
+To increase spacing between each group:
+	-Select the item in the group/break column.
+	-Click on select parent frame.
+	-Increase Vert. Space Between Frames
+	
+Items in a bottom group can be dragged and dropped to an upper group to make it as a break column.
+If col1 and col2 are added as a single break group, for every new value of col2, col1 will repeat. To avoid this make col1 first break group, make col2 the second break group and then add all other items in the third group
+
+Whenever Data Model is modified after creating a layout, we need to redefault the layout. Open Report Wizard-->Choose report type(paper/web)-->Finish
+
+
+Data Link
+---------
+A data link is a data model object that enables us to relate multiple queries and implement database relationships(one-to-one, one-to-many, many-to-many).
+For a simple group report we can relate two queries using primary key and foreign keys of the tables from which we are selecting data.
+
+Data link causes Report Builder to create an SQL clause defining a join between a parent group and a child query, based on the information specified when creating the link.
+This clause is added to the child query's SELECT statement during runtime.
+The join defined by a default data link is an outer join(starting table left outer join ending table)
+
+Properties of Data Link:-
+SQL Clause: Default clause is WHERE. Other options are HAVING and STARTS WITH
+Condition: Equal to (=)
+
+Don't use Report Wizard for this. Use Data Wizard to create all the necessary data blocks and then create data links between them.
+After this we can use the Report Wizard to create the layout.
+When creating the layout both groups will be selected,i.e, no need to give what the grouping/breaking column is.
+When choosing the display fields one of the join columns can be omitted as it is present in both the groups. Keep the one in the parent(because the child one will repeat). 
+
+
+Creating a data link between two data blocks is equivalent to creating a single query with the same join condition(left outer join) as specified for the data link.
+For this use the Report wizard to create the datablock. Write the join query. Choose the group fields.
+
+A single and multiple-query group report look the same but have different data models.
+A single-query report has multiple groups underneath one query, while the multiple-query report uses one group underneath each of several queries.
+In the single-query case, the relationship is established by the heirarchy of groups underneath the query.
+In the multiple-query case, the relationship is established by data links between the groups of different queries.
+
+
+-----------------------------------------------------------------------------------------------------------
+Insert->Report Block can be used to create a custom layout.
+When selecting groups, it can be selected whether Across or Down.
+When there are multiple groups, the lowest group should be moved to right first and the base group last, so that the base group will appear on top on the right side.
+
+When building multiple layouts, create first layout through Report Wizard and the second by inserting a Record Block.
+
+Confine Mode On: Child objects are confined inside their parent objects and cannot be moved outside.
+Confine Mode Off: Child objects can be moved outside their enclosing parent objects.
+Flex Mode On: Parent borders strech when child objects are moved inside them. The child object maintains the same distance from the side it moves against.
+Flex Mode Off: Parent borders remain fixed when child objects are moved inside them.
+
+If a  summary layout is outside the main layout, then it will summarize for the whole layout.
+To make sure summary is for each group, we need to move the summary layout inside the main layout, so that the summary will repeat along with each group.
+	-	Confine Off, Flex On
+	-	Go to the main layout(inside body)
+	-	Select the repeating frame inside it.
+	-	Extend it (down) to provide room for the summary layout inside it.
+	- 	Flex Off
+	-	Select the summary layout(inside body)
+	-	Move it inside the main layout.
+
+Report Builder Wizard:
+Layout Type-->Layout Title and Style-->Query Type-->Build Query-->Group Fields(decide what all fields are group fields)-->Display Fields-->Formula Fields-->Labels-->Template
+Group Fields(Down/Across)-->
+Data Wizard:
+Query Name-->Query Type-->Build Query-->Group Fields(decide what all fields are group fields)-->Formula Fields
+Report Wizard:
+Layout Type-->Layout Title and Style-->Group Fields(decide what all group fileds are to be include in the layout & whether it is Down/Across)-->Display Fields-->Labels-->Template
+Report Block Wizard:
+Layout Title and Style-->Group Fields(Down/Across)-->Display Fields-->Labels-->Template
+
+
+
+Objec Property:-
+	-	Horizontal Elasticity: Specifies how the horizontal size of the object will change at runtime to accomodate the objects or data within it.(Contract/Expand/Fixed/Variable)
+	-	Vertical Elasticity: Specifies how the veritcal size of the object will change at runtime to accomodate the objects or data within it.(Contract/Expand/Fixed/Variable)
+	Contract: Size of object decreases
+	Expand: Size of object increases
+	Fixed: Size is fixed. Data may get truncated.
+	Variable: Size of object either increases or decreases to accomodate the data within it.
+	
+After creating Data blocks and report layout, we can add formula columns:
+	-	Go to data block and create a formula column in the required group
+	-	In the Property Inspector of the formula column, edit the PL/SQL function to calculate and return the value.
+	-	To reference other fields in the group, precede it with : (:ORDER_AMOUNT)
+	-	Go back to the report wizard-display fields tab. Move the new formula column to the right.
+	
+After creating data block we can add summary columsn:
+	-	Go to the data block and create a summary column in the required group.
+	-	Select the Function, Source, Reset At, Compute At (for % totals only)
+	
+	
+	
+Manually building a report:
+	-	Go to datablock.
+	-	Insert SQL query
+	-	Grouping/breaking columns  can be created by dragging the required field out and to the top of the group.
+	- Open Report Wizard and built layout.
+	
+	
+Boilerplate: Text or graphics that appear in a report every time it is run.
+Repeating Frame: It surrounds all of the fields that are created for a group's columns. The contents of the repeating group are printed for each record in the group.
+-How often boilerplates and fields appear depends on where we position it in our layout. Any boilerplate that is positioned within the repeating frame will print once every time the repeating frame prints. Boilerplate that is outside of all the repeating frames will print once for the entire report.
+	
+
+In the label we can use lexical parameters to refernce other fields.
+For eg: Total Salary for Department &DEPARTMENT_ID
+This will give the appropriate department_id each time the label is printed.
+
+To add header or footer:
+	-	Go to Paper Layout View.
+	-	Click on Edit Margin.
+	-	Insert Text/Image on top of the Margin to add Header.
+	-	Insert Text/Image on bottom of the Margin to add Footer.
+	
+To get the first/last item(department_id) from a Page:
+	-	Create a Summary column outside all the groups
+	-	Function: First/Last
+	-	Source: Department_ID
+	-	Reset at: Page
+	-	Now this summary column can be used anywhere by preceding it with & as a lexical parameter(in header/footer)
+	
+
+After adding a new datablock after building the report using the Report Builder Wizard:
+	-	Open Report Wizard
+	-	Choose Layout
+	-	Skip Title and Style
+	-	Move the new group to the right to display it Down/Across
+	-	Choose fields from the new group to display and change labels.
+	-	Finish
+	
+	
+For a Repeating Frame:
+	-	'Maximum Records Per Page' specifies the maximum number of instances of the repeating frame that will be formatted on a page.
+	-	'Page Protect' when set to 'Yes' it means if the contents of the object cannot fit on the current logical page, the object and all of its contents will be moved to the next logical page.
+
+
+
+All grouping items will be displayed with Label and field on the same line.
+All final grouped items will be displayed in tabular form.
+
+
+Adding Page Numbers:
+	-	Open Paper Layout
+	-	Edit Margins
+	-	Add a new 'Field' for current page number of the group: &F_PAGE_NUM
+	-	Open Property Inspector for the new field
+	-	Source: Page Number
+	-	Visible: No
+	-	Page Numbering: Reset at-(group name) (&Report: calculates for the whole report)
+	-	Horizontal Elasticity: Variable
+	-	Add one more 'Field' for total page number of the group: &F_TOT_PAGE_NUM
+	-	Open Property Inspector for the new field
+	-	Source: Total Pages
+	-	Visible: No
+	-	Page Numbering: Reset at-(group name) (&Report: calculates for the whole report)
+	-	Horizontal Elasticity: Variable
+	-	Create a Text field with lexical parameters to reference the two new fields: 'Page &F_PAGE_NUM of &F_TOT_PAGE_NUM' 
+	
+	
+Fields in the layout are referened with &, items in datablock is referenced by :
+
+To create global variables in the report:
+	-	Create a new package specification (preferable called 'global')
+	-	Add variables inside it.
+	-	These can be used globally with spec name (global.var_name)
+	- These global variables can be used to remove duplicates:
+		-	Go to the field that needs to be modified
+		-	Advanced Layout-->Format Trigger (this should return True for the value to display)-->
+		-	if global.prev_val = :department --field name
+			then
+				return false;
+			else
+				global.prev_val := :department
+				return true;
+			end if;
+			--prev_val is used to compare the current department value to the previous one.
+			
+			
+To validate whether the detail block for a group has any item in it and in such cases instead of displaying empty labels, display custom messaage:
+	-	Add a formula column to the detail block. (DETAIL_VAL)
+	-	PL/SQL formula would just return 1. This is to count how many childs are under the master group.
+	-	Add a summary column to the master group. (COUNT_DETAIL)
+	-	Fucntion: Count; Source: DETAIL_VAL; Reset At: <master group name>
+	-	Open Property Inspector of the label of the detail group in Paper Design.
+	-	Advanced Layout-->Format Trigger-->
+		IF :COUNT_DETAIL = 0 THEN
+			RETURN TRUE;
+		ELSE
+			RETURN FALSE;
+		END IF;
+	-	Go to Paper Layout
+	-	Confine Off; Flex Off
+	-	Create a new Text field above the contents of the detailed block. Make sure the rectangle is as big as the size of the contents of detail block.
+	-	Text item- "no detail records found"
+	-	Confine On
+	-	Select the repeating frame of the detail group and all other items in it except for the new text item.
+	-	Layout-->Bring to Front
+	-	Now the boilerplate text field will be located directly under the parent frame(not in the repeating frame.). So, whenever there is content in the detail group, that content will be displayed.
+		If there is no content, then detail group is hidden/blocked by the format trigger and hence the boilerplate text will appear.
+		
+		
+Using Format Trigger, we can choose to display any item based on some validation.
+Only if the format trrigger function returns true, the item will be displayed.
+
+When using format triggers and if some  boilerplate is not displayed, inorder to prevent gaps in between, we need to anchor the objects:
+	-	Go to Paper Layout
+	-	Select Anchor tool
+	-	Click and drag a line from the top left corner of the bottom text object to the top left corner of the top text object.
+	-	Double click to create the new anchor object.
+	-	Open property inspector of the anchor object:
+		-	Child Edge Percent: 0
+		-	Parent Edge Percent: 0
+		-	Collapse Verticall: Yes (if the item is to be moved up)
+		
+When moving items forward/backward in case we get an error saying that object cannot be moved, then turn Confine Off.
+
+To change the size of items, turn flex off.
+
+
+Two different views in Object Navigator:
+	-	Ownership View(default): shows parent-child heirarchy
+	-	Object Type View: Displays object by their type.(eg: all queries would appear under Queries heading and all database columns under Database Columns heading)
+	
+	
+A single query report runs faster however a multiple-query report is easier to conceptualize and code than a single query.
+
+
+Cross product: It is a group that owns two or more groups and performs a mathematical cross product. It creates the grid and correlates values between one or more groups within it to produce  the  data in the matrix.
+
+
+Matrix report require four groups:
+	-	One group of data is displayed down the page, which furnishes the row labels.
+	-	One group of data is displayed across the page, which furnishes the column labels
+	-	One group of data is the cross product, which creates the grid. It determines all possible locations where the across and down data relate and place a cell in those locations.
+	-	The fourth group provides values that fill the grid.
+Besides these 4, the matrix can also include summaries of each row and each column and for the whole matrix

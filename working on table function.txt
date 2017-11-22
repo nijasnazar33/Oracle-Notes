@@ -1,0 +1,68 @@
+DECLARE
+    
+    TYPE t_my_rec IS RECORD(
+        lv_empno emp.empno%type,
+        lv_ename emp.ename%type
+        );
+    TYPE t_my_coll_nt IS TABLE of t_my_rec;
+    lv_my_coll t_my_coll_nt := t_my_coll_nt();
+    FUNCTION my_emp_func
+    RETURN t_my_coll_nt
+    IS
+        CURSOR lv_my_cursor IS
+            SELECT empno, ename FROM emp where deptno=10;
+        -- lv_my_rec lv_my_cursor%rowtype;
+        lv_my_inner_coll t_my_coll_nt ;
+        --:= t_my_coll_nt();
+    BEGIN
+        OPEN lv_my_cursor;
+        -- LOOP
+            FETCH  lv_my_cursor BULK COLLECT INTO lv_my_inner_coll;
+            -- EXIT WHEN lv_my_cursor%NOTFOUND;
+            -- DBMS_OUTPUT.PUT_LINE('BEFORE EXTENDING: '||lv_my_inner_coll.COUNT);
+            -- lv_my_inner_coll.EXTEND;
+            -- DBMS_OUTPUT.PUT_LINE('AFTER EXTENDING: '||lv_my_inner_coll.COUNT);
+            -- DBMS_OUTPUT.PUT_LINE('LAST: '||lv_my_inner_coll.LAST);
+            -- lv_my_inner_coll(lv_my_inner_coll.COUNT).lv_empno := lv_my_rec.empno;
+            -- lv_my_inner_coll(lv_my_inner_coll.COUNT).lv_ename := lv_my_rec.ename;
+        -- END LOOP;
+        CLOSE lv_my_cursor;
+        RETURN lv_my_inner_coll;
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('ERROR IS: ' || SQLERRM);
+            DBMS_OUTPUT.PUT_LINE('LINE NUMBER : ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE);
+    END;
+BEGIN
+    -- lv_my_coll := my_emp_func();
+    -- dbms_output.put_line('count: ' || lv_my_coll.COUNT) ;
+    execute immediate ('select * from table(my_emp_func)')
+    bulk collect into lv_my_coll;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR IS: ' || SQLERRM);
+        DBMS_OUTPUT.PUT_LINE('LINE NUMBER : ' || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE);
+END;
+    
+
+
+
+--Direct call not working.. Try debugging by calling the function from an anonymous block
+-- SELECT * FROM TABLE(my_emp_func);
+
+
+-- SELECT * FROM USER_OBJECTS WHERE OBJECT_NAME = 'MY_EMP_FUNC';
+
+-- EXEC MY_PROC('emp');
+
+-- SELECT empno, ename FROM emp ;
+
+
+-- CREATE OR REPLACE TYPE t_my_coll_type AS OBJECT(
+--     lv_empno NUMBER,
+--     lv_ename VARCHAR2(100)
+-- );
+
+-- CREATE OR REPLACE TYPE t_my_coll_nt IS TABLE OF t_my_coll_type;
+
