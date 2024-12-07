@@ -378,3 +378,5 @@ Register Columns in Oracle Apps:
 AD_DD.REGISTER_TABLE(<app short name>, <table name>, <column name>, <col number>, <datatype>, <length>, <nullable>, <translatable>)
 
 After registering we can check it in Application Developer-->Application-->Datbase-->Table
+
+new line
